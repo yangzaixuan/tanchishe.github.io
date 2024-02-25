@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>贪吃蛇游戏</title>
+<style>
+    body, html {
+        height: 100%;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: black; /* 设置背景色为黑色 */
+        color: white; /* 设置文字颜色为白色 */
+        font-family: Arial, sans-serif; /* 设置字体 */
+    }
+    #game-container {
+        text-align: center;
+    }
+    #game-board {
+        width: 600px; /* 将游戏范围增大到 600x600 */
+        height: 600px;
+        border: 1px solid white; /* 设置边框颜色为白色 */
+        position: relative;
+        display: inline-block; /* 添加此样式以使得游戏板和分数能够水平排列 */
+    }
+    #score {
+        position: absolute;
+        left: 20px; /* 设置分数元素距离左边的位置 */
+        top: 20px; /* 设置分数元素距离上边的位置 */
+    }
+    #instruction {
+        position: absolute;
+        left: 20px; /* 设置提示文字距离左边的位置 */
+        top: 50px; /* 设置提示文字距离上边的位置 */
+    }
+    #restart-button {
+        margin-top: 20px; /* 设置按钮距离上方的间距 */
+        cursor: pointer; /* 设置鼠标悬停样式为手型 */
+        display: none; /* 初始状态下隐藏重新开始按钮 */
+        width: 200px; /* 设置按钮宽度 */
+        height: 40px; /* 设置按钮高度 */
+        font-size: 16px; /* 设置按钮文字大小 */
+        background-color: blue; /* 设置按钮背景颜色为蓝色 */
+        border: none; /* 移除按钮边框 */
+        color: white; /* 设置按钮文字颜色为白色 */
+    }
+    .snake-part {
+        width: 20px;
+        height: 20px;
+        background-color: green;
+        position: absolute;
+    }
+    #food {
+        width: 20px;
+        height: 20px;
+        background-color: red;
+        position: absolute;
+    }
+</style>
+</head>
+<body>
+<div id="game-container">
+    <div id="instruction">用方向键控制，按下任意方向键开始游戏</div> <!-- 添加提示文字的元素 -->
+    <div id="score"> </div> <!-- 添加显示分数的元素 -->
+    <div id="game-board"></div>
+    <button id="restart-button">重新开始游戏</button> <!-- 添加重新开始游戏的按钮 -->
+</div>
+<script>
+    const board = document.getElementById('game-board');
+    const boardWidth = 600; /* 将游戏范围增大到 600x600 */
+    const boardHeight = 600;
+    const snakeSize = 20;
+    let snake = [{ x: 300, y: 300 }]; /* 将贪吃蛇初始位置设为中心 */
+    let dx = 0;
+    let dy = 0;
+    let food = { x: 0, y: 0 };
+    let score = 0; // 初始化分数
+
+    const scoreElement = document.getElementById('score');
+    const instructionElement = document.getElementById('instruction');
+    const restartButton = document.getElementById('restart-button');
+
+    function drawSnake() {
+        const oldSnakeParts = document.querySelectorAll('.snake-part');
+        oldSnakeParts.forEach(part => part.remove());
+        snake.forEach(part => {
+            const snakePart = document.createElement('div');
+            snakePart.className = 'snake-part';
+            snakePart.style.left = part.x + 'px';
+            snakePart.style.top = part.y + 'px';
+            board.appendChild(snakePart);
+        });
+    }
+
+    function generateFood() {
+        const x = Math.floor(Math.random() * (boardWidth / snakeSize)) * snakeSize;
+        const y = Math.floor(Math.random() * (boardHeight / snakeSize)) * snakeSize;
+        food = { x, y };
+        const oldFood = document.getElementById('food');
+        if (oldFood) oldFood.remove();
+        const foodElement = document.createElement('div');
+        foodElement.id = 'food';
+        foodElement.style.left = x + 'px';
+        foodElement.style.top = y + 'px';
+        board.appendChild(foodElement);
+    }
+
+    function moveSnake() {
+        const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+        snake.unshift(head);
+        if (head.x === food.x && head.y === food.y) {
+            generateFood();
+            score++; // 每吃到一个食物增加 1 分
+            scoreElement.textContent = score; // 更新分数显示
+        } else {
+            snake.pop();
+        }
+        drawSnake();
+    }
+
+    function gameOver() {
+        clearInterval(gameInterval);
+        restartButton.style.display = 'block'; // 游戏结束后显示重新开始按钮
+        alert('Game Over! Final Score: ' + score);
+    }
+
+    function checkCollision() {
+        const head = snake[0];
+        if (head.x < 0 || head.x >= boardWidth || head.y < 0 || head.y >= boardHeight) {
+            gameOver();
+        }
+        for (let i = 1; i < snake.length; i++) {
+            if (head.x === snake[i].x && head.y === snake[i].y) {
+                gameOver();
+            }
+        }
+    }
+
+    document.addEventListener('keydown', event => {
+        if (event.key === 'ArrowUp' && dy !== snakeSize) {
+            dx = 0;
+            dy = -snakeSize;
+            instructionElement.style.display = 'none'; // 按下方向键后隐藏提示文字
+        } else if (event.key === 'ArrowDown' && dy !== -snakeSize) {
+            dx = 0;
+            dy = snakeSize;
+            instructionElement.style.display = 'none'; // 按下方向键后隐藏提示文字
+        } else if (event.key === 'ArrowLeft' && dx !== snakeSize) {
+            dx = -snakeSize;
+            dy = 0;
+            instructionElement.style.display = 'none'; // 按下方向键后隐藏提示文字
+        } else if (event.key === 'ArrowRight' && dx !== -snakeSize) {
+            dx = snakeSize;
+            dy = 0;
+            instructionElement.style.display = 'none'; // 按下方向键后隐藏提示文字
+        }
+    });
+
+    restartButton.addEventListener('click', () => {
+        snake = [{ x: 300, y: 300 }]; // 重置贪吃蛇位置
+        dx = 0;
+        dy = 0;
+        score = 0; // 重置分数
+        scoreElement.textContent = ' '; // 更新分数显示为空格
+        restartButton.style.display = 'none'; // 隐藏重新开始按钮
+        generateFood();
+        gameInterval = setInterval(() => { // 重新开始游戏
+            moveSnake();
+            checkCollision();
+        }, 100);
+    });
+
+    generateFood();
+    let gameInterval; // 保留 gameInterval 变量以便后续更新
+
+    document.addEventListener('keydown', event => {
+        if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+            if (!gameInterval) { // 只有在游戏未开始时才创建游戏循环
+                gameInterval = setInterval(() => {
+                    moveSnake();
+                    checkCollision();
+                }, 100);
+            }
+        }
+    });
+</script>
+</body>
+</html>
