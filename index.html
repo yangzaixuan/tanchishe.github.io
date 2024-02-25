@@ -121,10 +121,12 @@
     }
 
     function gameOver() {
-        clearInterval(gameInterval);
-        restartButton.style.display = 'block'; // 游戏结束后显示重新开始按钮
-        alert('Game Over! Final Score: ' + score);
-    }
+    clearInterval(gameInterval); // 停止游戏循环
+    const snakeParts = document.querySelectorAll('.snake-part'); // 获取所有蛇身部分
+    snakeParts.forEach(part => part.remove()); // 移除所有蛇身部分
+    restartButton.style.display = 'block'; // 游戏结束后显示重新开始按钮
+    alert('Game Over! Final Score: ' + score);
+}
 
     function checkCollision() {
         const head = snake[0];
